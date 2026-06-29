@@ -48,8 +48,8 @@ func (s *questionService) GetQuestions() ([]dto.QuestionResponse, error) {
 
 	for _, question := range questions {
 
+		// Topic Tags
 		tags := make([]dto.TopicTag, len(question.TopicTags))
-
 		for i, tag := range question.TopicTags {
 			tags[i] = dto.TopicTag{
 				Name: tag.Name,
@@ -57,10 +57,22 @@ func (s *questionService) GetQuestions() ([]dto.QuestionResponse, error) {
 			}
 		}
 
+		// Examples
+		examples := make([]dto.Example, len(question.Examples))
+		for i, ex := range question.Examples {
+			examples[i] = dto.Example{
+				Number:      ex.Number,
+				Images:      ex.Images,
+				Input:       ex.Input,
+				Output:      ex.Output,
+				Explanation: ex.Explanation,
+				Notes:       ex.Notes,
+			}
+		}
+
 		progress, exists := progressMap[question.ID]
 
 		var completedAt *time.Time
-
 		if exists {
 			t := progress.CompletedAt
 			completedAt = &t
@@ -77,8 +89,16 @@ func (s *questionService) GetQuestions() ([]dto.QuestionResponse, error) {
 			CompletedAt:    completedAt,
 			NeedsReattempt: exists && progress.NeedsReattempt,
 
-			TopicTags:   tags,
+			TopicTags: tags,
+
+			// Keep this only if you're still exposing the raw description.
 			Description: question.Description,
+
+			ParsedDescription: question.ParsedDescription,
+			CustomJudge:       question.CustomJudge,
+			Examples:          examples,
+			Constraints:       question.Constraints,
+			FollowUp:          question.FollowUp,
 		})
 	}
 

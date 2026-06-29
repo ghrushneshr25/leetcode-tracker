@@ -72,7 +72,7 @@ export default function Filters({
           <option value="INCOMPLETE">
             Incomplete
           </option>
-          <option value="REATTEMPT">Needs Reattempt</option>
+          <option value="REATTEMPT">Reattempt</option>
         </select>
       </div>
     </div>

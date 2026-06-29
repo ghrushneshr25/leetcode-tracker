@@ -3,15 +3,30 @@ export interface TopicTag {
   slug: string;
 }
 
+export interface Example {
+  number: number;
+  images?: string[];
+  input?: string;
+  output?: string;
+  explanation?: string;
+  notes?: string[];
+}
+
 export interface Question {
+  difficulty: "EASY" | "MEDIUM" | "HARD";
   id: number;
   questionFrontendId: string;
+  status: string;
   title: string;
   titleSlug: string;
-  difficulty: "EASY" | "MEDIUM" | "HARD";
-  completed: boolean;
   topicTags: TopicTag[];
-  description: string;
-  completedAt: string;
-  needsReattempt: boolean;
+
+  parsedDescription?: string;
+  customJudge?: string;
+  examples?: Example[];
+  constraints?: string; // currently stored as a string in JSON
+  followUp?: string;
+  completed: boolean;
+  completedAt?: string;
+  needsReattempt?: boolean;
 }

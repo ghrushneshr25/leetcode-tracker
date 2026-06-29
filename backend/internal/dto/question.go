@@ -7,6 +7,15 @@ type TopicTag struct {
 	Slug string `json:"slug"`
 }
 
+type Example struct {
+	Number      int      `json:"number"`
+	Images      []string `json:"images,omitempty"`
+	Input       string   `json:"input,omitempty"`
+	Output      string   `json:"output,omitempty"`
+	Explanation string   `json:"explanation,omitempty"`
+	Notes       []string `json:"notes,omitempty"`
+}
+
 type QuestionResponse struct {
 	ID                 int    `json:"id"`
 	QuestionFrontendID string `json:"questionFrontendId"`
@@ -19,8 +28,17 @@ type QuestionResponse struct {
 
 	NeedsReattempt bool `json:"needsReattempt"`
 
-	TopicTags   []TopicTag `json:"topicTags"`
-	Description string     `json:"description"`
+	TopicTags []TopicTag `json:"topicTags"`
+
+	// Keep if you still want the original raw description.
+	// Otherwise remove it.
+	Description string `json:"description,omitempty"`
+
+	ParsedDescription string    `json:"parsedDescription,omitempty"`
+	CustomJudge       string    `json:"customJudge,omitempty"`
+	Examples          []Example `json:"examples,omitempty"`
+	Constraints       string    `json:"constraints,omitempty"`
+	FollowUp          string    `json:"followUp,omitempty"`
 }
 
 type UpdateProgressRequest struct {

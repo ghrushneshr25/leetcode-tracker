@@ -5,15 +5,20 @@ import {
   ArrowRightToLine,
   Check,
   LoaderCircle,
+  Maximize2,
   RotateCcw,
   X,
 } from "lucide-react";
 
 interface Props {
   question: Question;
+  onExpand: () => void;
 }
 
-export default function QuestionCard({ question }: Props) {
+export default function QuestionCard({
+  question,
+  onExpand,
+}: Props) {
   const mutation = useUpdateQuestion();
 
   const toggleCompleted = () => {
@@ -24,27 +29,16 @@ export default function QuestionCard({ question }: Props) {
   };
 
   const toggleReattempt = () => {
-  mutation.mutate({
-  id: question.id,
-  completed: true,
-});
-
-mutation.mutate({
-  id: question.id,
-  needsReattempt: true,
-});
-
-mutation.mutate({
-  id: question.id,
-  completed: true,
-  needsReattempt: true,
-});
+    mutation.mutate({
+      id: question.id,
+      needsReattempt: !question.needsReattempt,
+    });
   };
 
   const difficultyClasses = {
-    EASY: "bg-green-100 text-green-700",
-    MEDIUM: "bg-yellow-100 text-yellow-700",
-    HARD: "bg-red-100 text-red-700",
+    EASY: "border border-gray-300 bg-gray-100 text-gray-800",
+    MEDIUM: "border border-gray-300 bg-gray-100 text-gray-800",
+    HARD: "border border-gray-300 bg-gray-100 text-gray-800",
   };
 
   const completedAt = question.completedAt
@@ -58,37 +52,26 @@ mutation.mutate({
     : null;
 
   return (
-    <div
-      className={`rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-lg ${
-        question.completed
-          ? "border-l-4 border-l-green-500"
-          : ""
-      } ${
-        question.needsReattempt
-          ? "border-r-4 border-r-orange-500"
-          : ""
-      }`}
-    >
-      <div className="flex gap-8">
-        {/* Left */}
-        <div className="flex-1">
+  <div
+    className={`rounded-2xl border bg-white p-6 shadow-sm transition-all hover:shadow-lg ${
+      question.completed ? "border-l-4 border-l-black-500" : ""
+    } ${
+      question.needsReattempt
+        ? "border-r-4 border-r-black-500"
+        : ""
+    }`}
+  >
+    <div className="flex justify-between gap-8">
+      {/* Left */}
+      <div className="flex flex-1 flex-col">
+        {/* Title */}
+        <h2 className="text-2xl font-bold">
+          {question.questionFrontendId}. {question.title}
+        </h2>
+
+        {/* Difficulty + Status */}
+        <div className="mt-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h2 className="text-3xl font-bold">
-              {question.questionFrontendId}. {question.title}
-            </h2>
-
-            {question.needsReattempt && (
-              <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-700">
-                Needs Reattempt
-              </span>
-            )}
-          </div>
-
-          <p className="mt-3 max-w-4xl text-lg leading-8 text-gray-600 line-clamp-3">
-            {question.description}
-          </p>
-
-          <div className="mt-5">
             <span
               className={`rounded-full px-3 py-1 text-sm font-semibold ${
                 difficultyClasses[question.difficulty]
@@ -96,22 +79,46 @@ mutation.mutate({
             >
               {question.difficulty}
             </span>
+
+            {question.needsReattempt && (
+              <span className={`rounded-full px-3 py-1 text-sm font-semibold ${
+                difficultyClasses[question.difficulty]
+              }`}>
+                REATTEMPT
+              </span>
+            )}
           </div>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            {question.topicTags.map((tag) => (
-              <span
-                key={tag.slug}
-                className="rounded-md bg-gray-100 px-3 py-1 text-sm text-gray-700"
-              >
-                {tag.name}
-              </span>
-            ))}
-          </div>
         </div>
 
-        {/* Right */}
-        <div className="flex w-36 flex-col items-center border-l pl-6">
+        {/* Tags */}
+        <div className="mt-4 flex flex-wrap gap-2">
+          {question.topicTags.map((tag) => (
+            <span
+              key={tag.slug}
+              className="rounded-md bg-gray-100 px-3 py-1 text-sm text-gray-700"
+            >
+              {tag.name}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Actions */}
+    <div className="w-60 shrink-0">
+      <div className="rounded-xl border border-black bg-white p-3 shadow-sm">
+        {/* Buttons */}
+        <div className="grid grid-cols-4 gap-2">
+          {/* Details */}
+          <button
+            onClick={onExpand}
+            title="View Details"
+            className="flex h-11 items-center justify-center rounded-lg border bg-white text-gray-700 transition hover:bg-gray-100"
+          >
+            <Maximize2 size={18} />
+          </button>
+
+          {/* Open */}
           <button
             onClick={() =>
               window.open(
@@ -119,73 +126,81 @@ mutation.mutate({
                 "_blank"
               )
             }
-            className="rounded-2xl border border-blue-500 p-4 text-blue-600 transition hover:bg-blue-50"
             title="Open on LeetCode"
+            className="flex h-11 items-center justify-center rounded-lg border border-black-300 bg-white text-gray-700 transition hover:bg-gray-100"
           >
-            <ArrowRightToLine size={28} />
+            <ArrowRightToLine size={18} />
           </button>
 
+          {/* Complete */}
           <button
             disabled={mutation.isPending}
             onClick={toggleCompleted}
-            className={`mt-4 rounded-2xl border p-4 transition ${
-              question.completed
-                ? "border-red-500 text-red-500 hover:bg-red-50"
-                : "border-green-500 text-green-500 hover:bg-green-50"
-            }`}
             title={
               question.completed
                 ? "Mark Incomplete"
                 : "Mark Complete"
             }
+            className={`flex h-11 items-center justify-center rounded-lg border transition ${
+              question.completed
+              ? "border-black-500 bg-gray-100 text-gray-800 hover:bg-gray-200"
+              : "border-black-500 text-gray-700 hover:bg-gray-100"
+            }`}
           >
             {mutation.isPending ? (
               <LoaderCircle
-                size={28}
+                size={18}
                 className="animate-spin"
               />
             ) : question.completed ? (
-              <X size={28} />
+              <X size={18} />
             ) : (
-              <Check size={28} />
+              <Check size={18} />
             )}
           </button>
 
+          {/* Reattempt */}
           <button
             disabled={
-              mutation.isPending ||
-              !question.completed
+              mutation.isPending || !question.completed
             }
             onClick={toggleReattempt}
-            className={`mt-4 rounded-2xl border p-4 transition ${
-              !question.completed
-                ? "cursor-not-allowed border-gray-200 text-gray-300"
-                : question.needsReattempt
-                ? "border-orange-500 bg-orange-50 text-orange-600"
-                : "border-gray-300 text-gray-500 hover:bg-gray-50"
-            }`}
             title={
               question.completed
                 ? "Toggle Needs Reattempt"
                 : "Complete the question first"
             }
+            className={`flex h-11 items-center justify-center rounded-lg border transition ${
+              !question.completed
+                ? "cursor-not-allowed border-gray-200 text-gray-300"
+                : question.needsReattempt
+                ? "border-black-500 bg-black-50 text-black-600"
+                : "border-gray-300 text-gray-500 hover:bg-gray-50"
+            }`}
           >
-            <RotateCcw size={28} />
+            <RotateCcw size={18} />
           </button>
+        </div>
 
-          <div className="mt-6 w-full border-t pt-4 text-center">
-            {completedAt ? (
-              <p className="text-sm font-medium text-gray-500">
-                {completedAt}
-              </p>
-            ) : (
-              <p className="text-sm font-medium text-gray-400">
-                Not Solved
-              </p>
-            )}
+        {/* Status */}
+        <div className="mt-3 border-t pt-3">
+          <div className="flex justify-center">
+            <span
+              className={`whitespace-nowrap text-sm font-medium ${
+                question.completed
+                  ? "text-black-600"
+                  : "text-gray-500"
+              }`}
+            >
+              {question.completed
+                ? completedAt
+                : "Not Solved"}
+            </span>
           </div>
         </div>
       </div>
     </div>
-  );
+    </div>
+  </div>
+);
 }

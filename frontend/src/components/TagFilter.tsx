@@ -25,8 +25,8 @@ export default function TagFilter({
               onClick={() => onToggleTag(tag)}
               className={`rounded-full border px-3 py-1 text-sm transition-colors ${
                 selected
-                  ? "border-blue-600 bg-blue-600 text-white"
-                  : "border-gray-300 bg-white hover:bg-gray-100"
+                  ? "border-black bg-black text-white"
+                  : "border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
               }`}
             >
               {tag}

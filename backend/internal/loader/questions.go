@@ -7,20 +7,38 @@ import (
 	"github.com/ghrushneshr25/nexus"
 )
 
-type Question struct {
-	ID                 int        `json:"id"`
-	QuestionFrontendID string     `json:"questionFrontendId"`
-	Title              string     `json:"title"`
-	TitleSlug          string     `json:"titleSlug"`
-	Difficulty         string     `json:"difficulty"`
-	Status             string     `json:"status"`
-	Description        string     `json:"description"`
-	TopicTags          []TopicTag `json:"topicTags"`
-}
-
 type TopicTag struct {
 	Name string `json:"name"`
 	Slug string `json:"slug"`
+}
+
+type Example struct {
+	Number      int      `json:"number"`
+	Images      []string `json:"images,omitempty"`
+	Input       string   `json:"input,omitempty"`
+	Output      string   `json:"output,omitempty"`
+	Explanation string   `json:"explanation,omitempty"`
+	Notes       []string `json:"notes,omitempty"`
+}
+
+type Question struct {
+	ID                 int    `json:"id"`
+	QuestionFrontendID string `json:"questionFrontendId"`
+	Title              string `json:"title"`
+	TitleSlug          string `json:"titleSlug"`
+	Difficulty         string `json:"difficulty"`
+	Status             string `json:"status"`
+
+	// Keep this only if your JSON still contains the raw description.
+	Description string `json:"description,omitempty"`
+
+	ParsedDescription string    `json:"parsedDescription,omitempty"`
+	CustomJudge       string    `json:"customJudge,omitempty"`
+	Examples          []Example `json:"examples,omitempty"`
+	Constraints       string    `json:"constraints,omitempty"`
+	FollowUp          string    `json:"followUp,omitempty"`
+
+	TopicTags []TopicTag `json:"topicTags"`
 }
 
 type QuestionLoader interface {
