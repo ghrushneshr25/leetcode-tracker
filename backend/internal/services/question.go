@@ -1,6 +1,7 @@
 package services
 
 import (
+	"strings"
 	"time"
 
 	"github.com/ghrushneshr25/leetcode-tracker/backend/internal/dto"
@@ -64,15 +65,14 @@ func (s *questionService) GetQuestions() ([]dto.QuestionResponse, error) {
 			}
 		}
 
-		// Examples
 		examples := make([]dto.Example, len(question.Examples))
 		for i, ex := range question.Examples {
 			examples[i] = dto.Example{
 				Number:      ex.Number,
 				Images:      ex.Images,
-				Input:       ex.Input,
-				Output:      ex.Output,
-				Explanation: ex.Explanation,
+				Input:       normalizeNewlines(ex.Input),
+				Output:      normalizeNewlines(ex.Output),
+				Explanation: normalizeNewlines(ex.Explanation),
 				Notes:       ex.Notes,
 			}
 		}
@@ -90,14 +90,12 @@ func (s *questionService) GetQuestions() ([]dto.QuestionResponse, error) {
 			CompletedAt:    progress.CompletedAt,
 			NeedsReattempt: progress.NeedsReattempt,
 
-			TopicTags: tags,
-
-			Description:       question.Description,
-			ParsedDescription: question.ParsedDescription,
-			CustomJudge:       question.CustomJudge,
+			TopicTags:         tags,
+			ParsedDescription: normalizeNewlines(question.ParsedDescription),
+			CustomJudge:       normalizeNewlines(question.CustomJudge),
 			Examples:          examples,
-			Constraints:       question.Constraints,
-			FollowUp:          question.FollowUp,
+			Constraints:       normalizeNewlines(question.Constraints),
+			FollowUp:          normalizeNewlines(question.FollowUp),
 		})
 	}
 
@@ -155,4 +153,11 @@ func QuestionServiceContract() nexus.Contract[QuestionService] {
 
 func init() {
 	nexus.MustDeclare(NewQuestionService)
+}
+
+func normalizeNewlines(s string) string {
+	for strings.Contains(s, "\n\n") {
+		s = strings.ReplaceAll(s, "\n\n", "\n")
+	}
+	return s
 }
