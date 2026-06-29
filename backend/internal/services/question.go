@@ -18,6 +18,13 @@ type QuestionService interface {
 		completedAt *time.Time,
 		needsReattempt *bool,
 	) error
+
+	GetQuestionNotes(id int) (*dto.QuestionNotesResponse, error)
+
+	UpdateQuestionNotes(
+		id int,
+		request dto.UpdateQuestionNotesRequest,
+	) error
 }
 
 type questionService struct {
@@ -70,13 +77,7 @@ func (s *questionService) GetQuestions() ([]dto.QuestionResponse, error) {
 			}
 		}
 
-		progress, exists := progressMap[question.ID]
-
-		var completedAt *time.Time
-		if exists {
-			t := progress.CompletedAt
-			completedAt = &t
-		}
+		progress := progressMap[question.ID]
 
 		response = append(response, dto.QuestionResponse{
 			ID:                 question.ID,
@@ -85,15 +86,13 @@ func (s *questionService) GetQuestions() ([]dto.QuestionResponse, error) {
 			TitleSlug:          question.TitleSlug,
 			Difficulty:         question.Difficulty,
 
-			Completed:      exists,
-			CompletedAt:    completedAt,
-			NeedsReattempt: exists && progress.NeedsReattempt,
+			Completed:      progress.Completed,
+			CompletedAt:    progress.CompletedAt,
+			NeedsReattempt: progress.NeedsReattempt,
 
 			TopicTags: tags,
 
-			// Keep this only if you're still exposing the raw description.
-			Description: question.Description,
-
+			Description:       question.Description,
 			ParsedDescription: question.ParsedDescription,
 			CustomJudge:       question.CustomJudge,
 			Examples:          examples,
@@ -112,11 +111,9 @@ func (s *questionService) UpdateProgress(
 	needsReattempt *bool,
 ) error {
 
-	if completed != nil && *completed {
-		if completedAt == nil {
-			now := time.Now().UTC()
-			completedAt = &now
-		}
+	if completed != nil && *completed && completedAt == nil {
+		now := time.Now().UTC()
+		completedAt = &now
 	}
 
 	return s.repository.UpdateProgress(
@@ -125,6 +122,31 @@ func (s *questionService) UpdateProgress(
 		completedAt,
 		needsReattempt,
 	)
+}
+
+func (s *questionService) GetQuestionNotes(
+	id int,
+) (*dto.QuestionNotesResponse, error) {
+
+	progress, err := s.repository.GetQuestionNotes(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &dto.QuestionNotesResponse{
+		Algorithm:       progress.Algorithm,
+		TimeComplexity:  progress.TimeComplexity,
+		SpaceComplexity: progress.SpaceComplexity,
+		Notes:           progress.Notes,
+	}, nil
+}
+
+func (s *questionService) UpdateQuestionNotes(
+	id int,
+	request dto.UpdateQuestionNotesRequest,
+) error {
+
+	return s.repository.UpdateQuestionNotes(id, request)
 }
 
 func QuestionServiceContract() nexus.Contract[QuestionService] {

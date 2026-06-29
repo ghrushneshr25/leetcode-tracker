@@ -14,6 +14,9 @@ import (
 type QuestionHandler interface {
 	GetQuestions(c *gin.Context)
 	UpdateProgress(c *gin.Context)
+
+	GetQuestionNotes(c *gin.Context)
+	UpdateQuestionNotes(c *gin.Context)
 }
 
 type questionHandler struct {
@@ -64,6 +67,56 @@ func (h *questionHandler) UpdateProgress(c *gin.Context) {
 		request.CompletedAt,
 		request.NeedsReattempt,
 	); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+	})
+}
+
+func (h *questionHandler) GetQuestionNotes(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid question id",
+		})
+		return
+	}
+
+	notes, err := h.service.GetQuestionNotes(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, notes)
+}
+
+func (h *questionHandler) UpdateQuestionNotes(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid question id",
+		})
+		return
+	}
+
+	var request dto.UpdateQuestionNotesRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if err := h.service.UpdateQuestionNotes(id, request); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"error": err.Error(),
 		})

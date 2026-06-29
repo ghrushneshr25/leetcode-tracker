@@ -1,5 +1,18 @@
+import { useState } from "react";
+
 import type { Question } from "../types/question";
-import { ArrowRightToLine, X } from "lucide-react";
+
+import { X } from "lucide-react";
+
+import QuestionNotes from "./QuestionNotes";
+import { Check, Copy } from "lucide-react";
+
+import {
+  buildPrompt,
+  type PromptType,
+} from "../utils/promptBuilder";
+
+import { useQuestionNotes } from "../hooks/useQuestionNotes";
 
 interface Props {
   question: Question;
@@ -10,6 +23,11 @@ export default function QuestionDetails({
   question,
   onClose,
 }: Props) {
+  const { data: notes } = useQuestionNotes(question.id);
+
+  const [promptType, setPromptType] =
+    useState<PromptType>("INTERVIEW");
+
   const completedAt = question.completedAt
     ? new Date(question.completedAt).toLocaleString([], {
         day: "2-digit",
@@ -21,9 +39,12 @@ export default function QuestionDetails({
     : null;
 
   const difficultyClasses = {
-    EASY: "border border-gray-300 bg-gray-100 text-gray-800",
-    MEDIUM: "border border-gray-300 bg-gray-100 text-gray-800",
-    HARD: "border border-gray-300 bg-gray-100 text-gray-800",
+    EASY:
+      "border border-gray-300 bg-gray-100 text-gray-800",
+    MEDIUM:
+      "border border-gray-300 bg-gray-100 text-gray-800",
+    HARD:
+      "border border-gray-300 bg-gray-100 text-gray-800",
   };
 
   const decode = (text?: string) =>
@@ -37,8 +58,39 @@ export default function QuestionDetails({
         .split("\n")
         .map((line) => line.trim())
         .filter(Boolean)
-        .map((line) => line.replace(/^-+\s*/, ""))
+        .map((line) =>
+          line.replace(/^-+\s*/, "")
+        )
     : [];
+
+  const openChatGPT = () => {
+    const prompt = buildPrompt(
+      question,
+      notes,
+      promptType,
+    );
+
+    window.open(
+      `https://chatgpt.com/?q=${encodeURIComponent(
+        prompt,
+      )}`,
+      "_blank",
+    );
+  };
+
+  const [copied, setCopied] = useState(false);
+
+  const copyPrompt = async () => {
+    await navigator.clipboard.writeText(
+      buildPrompt(question, notes, promptType)
+    );
+
+    setCopied(true);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  };
 
   return (
     <div
@@ -54,20 +106,23 @@ export default function QuestionDetails({
         <div className="flex items-start justify-between border-b px-8 py-6">
           <div>
             <h1 className="text-3xl font-bold">
-              {question.questionFrontendId}. {question.title}
+              {question.questionFrontendId}.{" "}
+              {question.title}
             </h1>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <span
                 className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                  difficultyClasses[question.difficulty]
+                  difficultyClasses[
+                    question.difficulty
+                  ]
                 }`}
               >
                 {question.difficulty}
               </span>
 
               {question.needsReattempt && (
-                <span className="rounded-full px-3 py-1 text-sm font-semibold border border-gray-300 bg-gray-100 text-gray-800">
+                <span className="rounded-full border border-gray-300 bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-800">
                   REATTEMPT
                 </span>
               )}
@@ -90,9 +145,8 @@ export default function QuestionDetails({
 
         {/* Body */}
 
-        <div className="flex-1 overflow-y-auto px-8 py-8 space-y-8">
-
-          {/* Description */}
+        <div className="flex-1 space-y-8 overflow-y-auto px-8 py-8">
+                  {/* Description */}
 
           <section>
             <h2 className="mb-3 text-xl font-semibold">
@@ -114,9 +168,12 @@ export default function QuestionDetails({
                 Custom Judge
               </h2>
 
-              <div className="rounded-2xl border border-black bg-white p-6">
+              <div className="rounded-2xl border bg-white p-6">
                 <pre className="whitespace-pre-wrap font-mono text-sm leading-7">
-                  {decode(question.customJudge).replace(/^Custom Judge:\s*/, "")}
+                  {decode(question.customJudge).replace(
+                    /^Custom Judge:\s*/,
+                    "",
+                  )}
                 </pre>
               </div>
             </section>
@@ -157,7 +214,8 @@ export default function QuestionDetails({
                       </div>
                     )}
 
-                    <div className="space-y-4">
+                    <div className="space-y-5">
+
                       {example.input && (
                         <div>
                           <p className="mb-2 font-semibold">
@@ -196,12 +254,12 @@ export default function QuestionDetails({
 
                       {!!example.notes?.length &&
                         example.notes.map((note) => (
-                          <p
+                          <div
                             key={note}
-                            className="text-gray-600"
+                            className="rounded-lg bg-yellow-50 p-3 text-sm text-gray-700"
                           >
                             {decode(note)}
-                          </p>
+                          </div>
                         ))}
                     </div>
                   </div>
@@ -245,20 +303,131 @@ export default function QuestionDetails({
                 Follow-up
               </h2>
 
-              <div className="rounded-2xl border border-black-200 bg-white-50 p-6">
-                <p className="leading-7 text-black-900">
+              <div className="rounded-2xl border bg-gray-50 p-6">
+                <p className="leading-7 text-gray-700">
                   {decode(
-                    question.followUp.replace(/^Follow-up:\s*/, "")
+                    question.followUp.replace(
+                      /^Follow-up:\s*/,
+                      "",
+                    ),
                   )}
                 </p>
               </div>
             </section>
           )}
-        </div>
+
+          {/* Personal Notes */}
+
+          <QuestionNotes questionId={question.id} />
+                    {/* AI Assistant */}
+
+          <section>
+            <h2 className="mb-4 text-xl font-semibold">
+              AI Assistant
+            </h2>
+
+            <div className="rounded-2xl border bg-gray-50 p-6">
+
+              <p className="mb-6 text-sm text-gray-600">
+                Generate an AI prompt using this question and your saved notes.
+                The prompt will open directly in ChatGPT.
+              </p>
+
+              {/* Prompt Type */}
+
+              <div className="flex flex-wrap gap-3">
+
+                <button
+                  onClick={() => setPromptType("INTERVIEW")}
+                  className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                    promptType === "INTERVIEW"
+                      ? "bg-black text-white"
+                      : "bg-white hover:bg-gray-100"
+                  }`}
+                >
+                  🎯 Interview Coach
+                </button>
+
+                <button
+                  onClick={() => setPromptType("HINTS")}
+                  className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                    promptType === "HINTS"
+                      ? "bg-black text-white"
+                      : "bg-white hover:bg-gray-100"
+                  }`}
+                >
+                  💡 Hints Only
+                </button>
+
+                <button
+                  onClick={() => setPromptType("REVIEW")}
+                  className={`rounded-xl border px-4 py-2 text-sm font-medium transition ${
+                    promptType === "REVIEW"
+                      ? "bg-black text-white"
+                      : "bg-white hover:bg-gray-100"
+                  }`}
+                >
+                  🔍 Review Algorithm
+                </button>
+
+              </div>
+
+              {/* Prompt Preview */}
+
+              <div className="mt-6">
+                <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">
+                  Prompt Preview
+                </h3>
+
+                <pre className="max-h-80 overflow-y-auto rounded-xl border bg-white p-5 text-sm leading-7 whitespace-pre-wrap text-gray-700">
+                  {buildPrompt(
+                    question,
+                    notes,
+                    promptType,
+                  )}
+                </pre>
+              </div>
+
+              {/* Actions */}
+
+              <div className="mt-6 flex items-center justify-end gap-3">
+
+                <button
+                  onClick={copyPrompt}
+                  className={`flex items-center gap-2 rounded-xl border px-5 py-2.5 text-sm font-medium transition-all duration-300 ${
+                    copied
+                      ? "border-black bg-white text-black"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  {copied ? (
+                    <>
+                      <Check size={18} />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy size={18} />
+                      Copy Prompt
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={openChatGPT}
+                  className="rounded-xl bg-black px-5 py-2.5 text-sm font-medium text-white transition hover:bg-gray-800"
+                >
+                  Open in ChatGPT →
+                </button>
+
+              </div>
+            </div>
+          </section>
+                  </div>
 
         {/* Footer */}
 
         <div className="flex items-center justify-between border-t bg-gray-50 px-8 py-5">
+
           <button
             onClick={onClose}
             className="rounded-xl border px-5 py-2 transition hover:bg-gray-100"
@@ -266,19 +435,31 @@ export default function QuestionDetails({
             Close
           </button>
 
-          <button
-            onClick={() =>
-              window.open(
-                `https://leetcode.com/problems/${question.titleSlug}`,
-                "_blank"
-              )
-            }
-            className="flex items-center rounded-xl border px-5 py-2 transition hover:bg-gray-100"
-          >
-            Open on LeetCode
-          </button>
+          <div className="flex items-center gap-3">
+
+            <button
+              onClick={() =>
+                window.open(
+                  `https://leetcode.com/problems/${question.titleSlug}`,
+                  "_blank",
+                )
+              }
+              className="rounded-xl border px-5 py-2 transition hover:bg-gray-100"
+            >
+              Open on LeetCode
+            </button>
+
+            <button
+              onClick={openChatGPT}
+              className="rounded-xl bg-black px-5 py-2 text-white transition hover:bg-gray-800"
+            >
+              Ask ChatGPT
+            </button>
+
+          </div>
+
         </div>
       </div>
-    </div>
+</div>
   );
 }

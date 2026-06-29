@@ -46,3 +46,17 @@ type UpdateProgressRequest struct {
 	CompletedAt    *time.Time `json:"completedAt,omitempty"`
 	NeedsReattempt *bool      `json:"needsReattempt,omitempty"`
 }
+
+type QuestionNotesResponse struct {
+	Algorithm       string `json:"algorithm"`
+	TimeComplexity  string `json:"timeComplexity"`
+	SpaceComplexity string `json:"spaceComplexity"`
+	Notes           string `json:"notes"`
+}
+
+type UpdateQuestionNotesRequest struct {
+	Algorithm       string `json:"algorithm"`
+	TimeComplexity  string `json:"timeComplexity"`
+	SpaceComplexity string `json:"spaceComplexity"`
+	Notes           string `json:"notes"`
+}

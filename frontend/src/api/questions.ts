@@ -1,12 +1,6 @@
-import axios from "axios";
+import api from "./api";
+
 import type { Question } from "../types/question";
-
-
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-});
-
-
 
 export async function getQuestions(): Promise<Question[]> {
   const response = await api.get<Question[]>("/api/questions");

@@ -33,6 +33,9 @@ func NewRouter(
 	{
 		api.GET("/questions", handler.GetQuestions)
 		api.PATCH("/questions/:id", handler.UpdateProgress)
+		api.PATCH("/questions/:id/notes", handler.UpdateQuestionNotes)
+		api.GET("/questions/:id/notes", handler.GetQuestionNotes)
+
 	}
 
 	return &router{
