@@ -43,6 +43,7 @@ type Question struct {
 
 type QuestionLoader interface {
 	Questions() []Question
+	GetQuestionById(id int) *Question
 }
 
 type questionLoader struct {
@@ -51,6 +52,15 @@ type questionLoader struct {
 
 func (l *questionLoader) Questions() []Question {
 	return l.questions
+}
+
+func (l *questionLoader) GetQuestionById(id int) *Question {
+	for _, question := range l.questions {
+		if question.ID == id {
+			return &question
+		}
+	}
+	return nil
 }
 
 func NewQuestionLoader() (QuestionLoader, error) {

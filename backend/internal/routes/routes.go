@@ -35,7 +35,8 @@ func NewRouter(
 		api.PATCH("/questions/:id", handler.UpdateProgress)
 		api.PATCH("/questions/:id/notes", handler.UpdateQuestionNotes)
 		api.GET("/questions/:id/notes", handler.GetQuestionNotes)
-
+		api.POST("/questions/:id/github", handler.PushSolutionToGithub)
+		api.GET("/questions/:id/github", handler.GetSolutionsFromGithub)
 	}
 
 	return &router{

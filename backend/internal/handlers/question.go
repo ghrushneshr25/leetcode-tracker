@@ -17,6 +17,9 @@ type QuestionHandler interface {
 
 	GetQuestionNotes(c *gin.Context)
 	UpdateQuestionNotes(c *gin.Context)
+
+	PushSolutionToGithub(c *gin.Context)
+	GetSolutionsFromGithub(c *gin.Context)
 }
 
 type questionHandler struct {
@@ -126,6 +129,61 @@ func (h *questionHandler) UpdateQuestionNotes(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 	})
+}
+
+func (h *questionHandler) PushSolutionToGithub(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid question id",
+		})
+		return
+	}
+
+	var request dto.PushGithubRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	response, err := h.service.PushSolutionToGithub(
+		id,
+		request,
+	)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+func (h *questionHandler) GetSolutionsFromGithub(
+	c *gin.Context,
+) {
+
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "invalid question id",
+		})
+		return
+	}
+
+	response, err := h.service.GetSolutionsFromGithub(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 func QuestionHandlerContract() nexus.Contract[QuestionHandler] {
